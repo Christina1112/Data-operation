@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+
+	<head lang="en">
+		<meta charset="UTF-8">
+		<title></title>
+		<style>
+			td {
+				text-align: center;
+			}
+			
+			.red {
+				background: red;
+			}
+			
+			.color {
+				background-image: linear-gradient(135deg, #41c8ff 0, #41c8ff 25%, #46e6fe 75%);
+			}
+		</style>
+		<script>
+			//在页面加载完成的时候，把下面这个数据动态添加到表格中
+
+			/*
+			    1、根据数据生成表格。
+			    2、数据的添加
+			    3、全选、单选
+			    4、单条删除，选中删除
+			    5、排序（按年龄从大到小-从小到大）
+			    6、如果是在排序的状态，添加后依然保持排序
+			*/
+		</script>
+	</head>
+
+	<body>
+
+		<form action="" name="form">
+			<p>
+				姓名:<input type="text" id="userName" name="username" />
+			</p>
+			<p>
+				年龄:<input type="text" id="age" name="age" />
+			</p>
+			<p>
+				性别:
+				<select name="sex" id="sex">
+					<option value=" 男 ">男</option>
+					<option value="女">女</option>
+				</select>
+			</p>
+			<p>
+				<input type="button" id="add" value="添加" name="add" />
+			</p>
+		</form>
+		<input type="button" id="deleteAll" value="删除选中" class="btn">
+		<input type="button" value="年龄从小到大" id="ageSort" class="btn">
+		<table id="tab1" width="100%" border="1">
+
+			<thead>
+				<tr>
+					<th>
+						<input id="checkAll" type="checkbox" /> 全选
+					</th>
+					<th>ID</th>
+					<th>姓名</th>
+					<th>年龄</th>
+					<th>性别</th>
+					<th>操作</th>
+				</tr>
+			</thead>
+
+			<tbody>
+				<!-- <tr>
+                <td>
+                    <input type="checkbox"/>
+                </td>
+                <td>1</td>
+                <td>LEO</td>
+                <td>36</td>
+                <td>男</td>
+                <td>
+                    <a href="javascript:;">删除</a>
+                </td>
+            </tr> -->
+			</tbody>
+
+		</table>
+		<script src="./utils.js"></script>
+		<script src="./data.js"></script>
+		<script type="text/javascript">
+			//------------------------------------渲染数据结构-------------------------------------
+
+			var tbody = document.getElementsByTagName('tbody')[0];
+			console.log(tbody)
+			render()
+
+			function render() {
+				var html = data.map(function(item) {
+					return `<tr data-id="${item.id}">
+                <td>
+                    <input type="checkbox" ${item.checked?'checked':''}/>
+                </td>
+                <td>${item.id}</td>
+                <td>${item.username}</td>
+                <td>${item.age}</td>
+                <td>${item.sex}</td>
+                <td>
+                    <a href="javascript:;" data-id="${item.id}">删除</a>
+                </td>`
+				}).join('');
+
+				tbody.innerHTML = html;
+			}
+		//----------------------------------隔行变色------------------------------------------	
+			changeColor()
+			function changeColor(){
+				var trs = tbody.getElementsByTagName('tr');
+				for(var i=0;i<trs.length;i++){
+					if(i%2===0){
+						trs[i].style.background='yellow';
+					}else{
+						trs[i].style.background='green';
+					}
+				}
+			}
+			//--------------------------删除(利用委托事件寻找事件源进行删除)--------------------------
+			function deleteById(id){
+				data = data.filter(function(item){
+					return item.id!=id;//返回删除后剩余的数据
+				})
+			}
+			//获取选中的input从而获取到被训中的哪些行
+			var inputs = tbody.getElementsByTagName('input');
+			console.log(inputs)
+			function whoSelect(){
+				var selectArr = [];
+				for(var i=0;i<inputs.length;i++){
+					if(inputs[i].checked){
+						selectArr.push(inputs[i].parentNode.parentNode);
+					}
+				}
+				return selectArr;
+			}
+			function getDataById(id){//给她一个id从数据中选中一个对应的key,key唯一，数据中的id恰好为所给id,说明id对应的唯一key被选中
+				return data.filter(function(item){
+					return item.id = id;
+				})[0];
+			}
+			var checkAll=document.getElementById('checkAll')
+			
+			tbody.onclick = function(ev){
+				if(ev.target.nodeName==="A"){//节点名字为a时
+					ev.target.parentNode.parentNode.remove();
+					var id = ev.target.dataset.id;
+					deleteById(id);
+					
+					if(!inputs.length){//所有的input都被删除掉
+						checkAll.disabled = true;//全选按钮不能再点击
+						checkAll.checked = false;//全选按钮没有被选中
+						return;
+					}
+					
+					if(whoSelect().length===inputs.length){
+						checkAll.checked = true;
+					}else{
+						checkAll.checked = false;
+					}
+					
+					changeColor();
+					
+					
+				}else if(ev.target.nodeName==="INPUT"){//节点名字为input时
+					
+					if(whoSelect().length===inputs.length){
+						checkAll.checked = true;
+					}else{
+						checkAll.checked = false;
+					}
+					
+					//单独的input被选中
+					var id = inputs[i].parentNode.parentNode.dataset.id;
+					getDataById(id).checked = ev.target.checked;
+				}
+			}
+			
+			//---------------------------全选--------------------------------
+			var checkAll = document.getElementById('checkAll');
+			//console.log(checkAll)
+			checkAll.onclick = function(ev){
+				for(var i=0;i<inputs.length;i++){
+					console.log(i)
+					inputs[i].checked = this.checked;
+					var id = inputs[i].parentNode.parentNode.dataset.id;
+					//当前事件源是？？？？？？？？？？？？？？？？？
+					getDataById(id).checked = this.checked;//全选选中，所指定的id对应的tr也会被选中
+					
+				
+				}
+				console.log(id);
+			}
+			
+			//---------------------------点击删除选中按钮---------------------
+			var deleteAll = document.getElementById('deleteAll');
+			deleteAll.onclick = function(){
+				var selectArr = whoSelect();
+				if(selectArr.length ===0){
+					alert("请选中数据")
+				}else{
+					for(var i=0;i<selectArr.length;i++){
+						selectArr[i].remove();
+						deleteById(selectArr[i].dataset.id);
+					}
+					if(!inputs.length){//所有的input都被删除掉
+						checkAll.disabled = true;//全选按钮不能再点击
+						checkAll.checked = false;//全选按钮没有被选中
+						
+					}
+					changeColor();
+				}
+			};
+			//--------------------------新添加数据-------------------------
+			var add = $("#add");
+			var userName = $("#userName");
+			var age = $("#age");
+			var sex = $("#sex");
+			
+			var customId = data.length+1;//新添加的数据id在之前基础上加一
+			add.onclick = function(ev){
+			
+				checkAll.disabled = false;//全选不能勾选
+				var userNameVal = userName.value.trim();//将用户名以及年龄前后的空格去掉
+				var ageVal = age.value.trim();
+				var sexVal = sex.value.trim();
+				if(userNameVal===''||ageVal===''){
+					alert('请添加信息');
+					return;
+				}
+				
+				//数据中的Id需要继续向上加
+				customId++;
+				//项数组中添加新的对象
+				data.push({
+					id: customId,
+					'username': userNameVal,
+					'age': ageVal,
+					'sex': sexVal
+				})
+				//添加数据时同时要判断是否排序
+				if(this.sort){//默认从大到小排序
+					data.sort(function(a,b){
+						return b.age-a.age;
+					})
+				}else{
+					data.sort(function(a,b){
+						return a.age-b.age;
+					})
+				}
+				//排序进行了结构调整，所以需要重新渲染结构,添加隔行变色
+				render();
+				changeColor();
+				checkAll.checked = false;
+				
+			};
+			
+			//-------------------------通过年龄来进行排序，点击从小到大或者从大到小排序-----------------------
+			var ageSort = $("#ageSort");
+			ageSort.onclick = function(){
+				this.isSort = true;//自定义属性，给他一个状态,
+				
+				if(this.sort){//默认从大到小排序
+					data.sort(function(a,b){
+						return b.age-a.age;
+					})
+					this.value = '从小到大排序'
+					this.sort = false;
+				}else{
+					data.sort(function(a,b){
+						return a.age-b.age;
+					})
+					this.value = '从大到小排序'
+					this.sort = true;
+				}
+				//排序进行了结构调整，所以需要重新渲染结构,添加隔行变色
+				render();
+				changeColor();
+//				
+			};
+			var age = document.getElementById('age');
+			add.onkeydown = function(ev){
+					if(ev.keyCode ==13){
+					render();
+				}
+			};
+			
+		</script>
+	</body>
+
+</html>
